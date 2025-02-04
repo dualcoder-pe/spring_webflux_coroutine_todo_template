@@ -8,15 +8,13 @@ spring:
   sql:
     init:
       mode: always
-      schema-locations: classpath:schema_oracle.sql
-      # for Oracle
+      schema-locations: classpath:schema.sql
       continue-on-error: true
 
   r2dbc:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
-    # for Oracle
     properties:
       oracle:
         connect-timeout: 3

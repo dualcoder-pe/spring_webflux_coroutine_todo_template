@@ -1,17 +1,13 @@
 package app.dualcoder.spring.todo.app.data
 
-import app.dualcoder.spring.todo.app.data.converter.DatabaseTypeConverter
 import io.r2dbc.spi.Readable
-import org.springframework.stereotype.Component
+import java.math.BigDecimal
 
-@Component
-class R2dbcExtensions(private val converter: DatabaseTypeConverter) {
-    fun Readable.getLong(name: String): Long? =
-        converter.getLong(this, name)
+fun Readable.getLong(name: String): Long? =
+    this.get(name, BigDecimal::class.java)?.longValueExact()
 
-    fun Readable.getBoolean(name: String): Boolean? =
-        converter.getBoolean(this, name)
+fun Readable.getBoolean(name: String): Boolean? =
+    this.get(name, BigDecimal::class.java)?.longValueExact()?.let { it > 0 }
 
-    fun Readable.getString(name: String): String? =
-        converter.getString(this, name)
-}
+fun Readable.getString(name: String): String? =
+    this.get(name, String::class.java)

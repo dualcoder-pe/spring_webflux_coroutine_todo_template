@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: todo
+
+  config:
+    import: optional:file:.env[.properties]
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema_oracle.sql
+      # for Oracle
+      continue-on-error: true
+
+  r2dbc:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    # for Oracle
+    properties:
+      oracle:
+        connect-timeout: 3
+        retry-count: 20
+        retry-delay: 3
+        ssl: true

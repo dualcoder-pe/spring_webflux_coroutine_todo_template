@@ -12,7 +12,6 @@ import org.springframework.stereotype.Repository
 @Repository
 class R2dbcTodoRepository(
     private val r2dbcEntityTemplate: R2dbcEntityTemplate,
-    private val r2dbcExtensions: R2dbcExtensions
 ) : TodoRepository {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -32,21 +31,19 @@ class R2dbcTodoRepository(
 
     override suspend fun findById(id: Long): TodoModel? {
         return try {
-            with(r2dbcExtensions) {
-                r2dbcEntityTemplate
-                    .databaseClient
-                    .sql("SELECT * FROM todo WHERE id = :id")
-                    .bind("id", id)
-                    .map { row, _ ->
-                        TodoEntity(
-                            id = row.getLong("id")!!,
-                            title = row.getString("title")!!,
-                            completed = row.getBoolean("completed")!!
-                        )
-                    }
-                    .awaitSingleOrNull()
-                    ?.toModel()
-            }
+            r2dbcEntityTemplate
+                .databaseClient
+                .sql("SELECT * FROM todo WHERE id = :id")
+                .bind("id", id)
+                .map { row, _ ->
+                    TodoEntity(
+                        id = row.get("id", Long::class.java)!!,
+                        title = row.get("title", String::class.java)!!,
+                        completed = row.get("completed", Boolean::class.java)!!
+                    )
+                }
+                .awaitSingleOrNull()
+                ?.toModel()
         } catch (e: Exception) {
             log.error("Failed to find todo by id: ${e.message}", e)
             null
@@ -55,18 +52,16 @@ class R2dbcTodoRepository(
 
     override suspend fun save(model: TodoModel): TodoModel? {
         return try {
-            with(r2dbcExtensions) {
-                val id = r2dbcEntityTemplate
-                    .databaseClient
-                    .sql("INSERT INTO todo (title, completed) VALUES (:title, :completed)")
-                    .bind("title", model.title)
-                    .bind("completed", model.completed)
-                    .filter { statement -> statement.returnGeneratedValues("id") }
-                    .map { row -> row.getLong("id")!! }
-                    .awaitSingleOrNull()
+            val id = r2dbcEntityTemplate
+                .databaseClient
+                .sql("INSERT INTO todo (title, completed) VALUES (:title, :completed)")
+                .bind("title", model.title)
+                .bind("completed", model.completed)
+                .filter { statement -> statement.returnGeneratedValues("id") }
+                .map { row -> row.get("id", Long::class.java)!! }
+                .awaitSingleOrNull()
 
-                id?.let { findById(it) }
-            }
+            id?.let { findById(it) }
         } catch (e: Exception) {
             log.error("Failed to save todo: ${e.message}", e)
             null
